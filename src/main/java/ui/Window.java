@@ -5,6 +5,7 @@ import controllers.MouseListener;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
+import utils.Time;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -15,12 +16,18 @@ public class Window {
     int width, height;
     String title;
     private long glfwWindow;
-    public static Window window = null;
+    private static Window window = null;
+    private static Scene currentScene = null;
+    public float r, b, g, a;
 
     private Window() {
-        this.width = 1920;
-        this.height = 1080;
+        this.width = 900;
+        this.height = 550;
         this.title = "Mario";
+        r = 1.0f;
+        g = 1.0f;
+        b = 1.0f;
+        a = 1.0f;
     }
 
     public static Window get() {
@@ -28,6 +35,17 @@ public class Window {
             window = new Window();
         }
         return Window.window;
+    }
+
+    public static void changingScene(int newScene) {
+        switch (newScene) {
+            case 0:
+                currentScene = new SceneLevelEditor();
+            case 1:
+                currentScene = new SceneLevel();
+            default:
+                assert false : "Unknown";
+        }
     }
 
     public void run() {
@@ -69,18 +87,29 @@ public class Window {
         glfwSwapInterval(1);
         glfwShowWindow(glfwWindow);
         GL.createCapabilities();
+
+        Window.changingScene(1);
     }
 
     public void loop() {
+        float startTime = Time.getTime();
+        float endTime;
+        float dt = -1.0f;
+
         while (!glfwWindowShouldClose(glfwWindow)) {
             glfwPollEvents();
-            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE)) {
-                System.out.println("key space");
+            if (dt >= 0) {
+                currentScene.update(dt);
             }
+
             glfwSwapBuffers(glfwWindow);
+
+            endTime = Time.getTime();
+            dt = endTime - startTime;
+            startTime = endTime;
         }
     }
 }
